@@ -51,14 +51,14 @@ function App({ signOut, user }) {
               padding: "16px 0px 8px 0px",
             }}
           >
-            &copy;{new Date().getFullYear()}, Amazon Web Services, Inc. or its
-            affiliates. All rights reserved.
+            {/*&copy;{new Date().getFullYear()}, Amazon Web Services, Inc. or its
+            affiliates. All rights reserved.*/}
           </Text>
-          <img
+          {/*<img
             src="/images/Powered-By_logo-horiz_RGB.png"
             width={160}
             alt="Powered By AWS"
-          />
+          />*/}
         </View>
       );
     },
