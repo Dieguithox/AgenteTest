@@ -106,7 +106,7 @@ export const invokeBedrockAgent = async (
           queryUuid: queryUuid,
         },
       },
-      enableTrace: true,
+      enableTrace: false,
       streamingConfigurations: { streamFinalResponse: true },
     };
 
