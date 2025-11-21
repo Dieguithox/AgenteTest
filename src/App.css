@@ -1,97 +1,144 @@
-/* amplify-theme.css */
+/* amplify-theme.css - MTCenter */
+
+/* Paleta base MTCenter (derivada del logo) */
 :root {
-  --amplify-fonts-default-variable: 'Open Sans';
-  --amplify-fonts-default-static: 'Open Sans';
+  /* Fuente */
+  --amplify-fonts-default-variable: 'Open Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --amplify-fonts-default-static: 'Open Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  --amplify-colors-shadow-primary: #EBEBEB;
+  /* Colores corporativos aproximados */
+  --mt-primary-100: #005b70;  /* Azul petróleo oscuro */
+  --mt-primary-80:  #007a94;  /* Azul turquesa intenso */
+  --mt-primary-60:  #0098b8;  /* Azul turquesa medio */
+  --mt-primary-40:  #21b2d0;  /* Cian brillante */
+  --mt-primary-20:  #5fd1e6;  /* Cian claro */
+  --mt-primary-10:  #e3f7fb;  /* Fondo muy suave azulado */
 
-  --amplify-colors-brand-primary-10: #7DCCC4;
-  --amplify-colors-brand-primary-20: #44B8AC;
-  --amplify-colors-brand-primary-40: #3AA69B;
-  --amplify-colors-brand-primary-60: #30948A;
-  --amplify-colors-brand-primary-80: #268279;
-  --amplify-colors-brand-primary-90: #1C7068;
-  --amplify-colors-brand-primary-100: #125E57;
+  --mt-accent-100:  #3b3b3f;  /* Gris oscuro */
+  --mt-accent-60:   #6a6a6f;  /* Gris medio */
+  --mt-accent-20:   #f3f4f6;  /* Gris muy claro */
 
-  --amplify-colors-brand-secondary-10: #8DD4BE;
-  --amplify-colors-brand-secondary-20: #56c9a6;
-  --amplify-colors-brand-secondary-40: #4BB795;
-  --amplify-colors-brand-secondary-60: #40A584;
-  --amplify-colors-brand-secondary-80: #359373;
-  --amplify-colors-brand-secondary-90: #2A8162;
-  --amplify-colors-brand-secondary-100: #1F6F51;
+  --amplify-colors-shadow-primary: rgba(0, 91, 112, 0.18);
 
-  --amplify-colors-border-primary: var(--amplify-colors-neutral-40);
+  /* Vincular paleta MTCenter a tokens de Amplify */
+  --amplify-colors-brand-primary-10:  var(--mt-primary-10);
+  --amplify-colors-brand-primary-20:  var(--mt-primary-20);
+  --amplify-colors-brand-primary-40:  var(--mt-primary-40);
+  --amplify-colors-brand-primary-60:  var(--mt-primary-60);
+  --amplify-colors-brand-primary-80:  var(--mt-primary-80);
+  --amplify-colors-brand-primary-90:  var(--mt-primary-100);
+  --amplify-colors-brand-primary-100: var(--mt-primary-100);
+
+  --amplify-colors-brand-secondary-10:  #f4fafb;
+  --amplify-colors-brand-secondary-20:  #ddeff5;
+  --amplify-colors-brand-secondary-40:  #bfd8e4;
+  --amplify-colors-brand-secondary-60:  #8aa3b5;
+  --amplify-colors-brand-secondary-80:  #566a7d;
+  --amplify-colors-brand-secondary-90:  #424f5b;
+  --amplify-colors-brand-secondary-100: #2c3740;
+
+  /* Bordes y fondos */
+  --amplify-colors-border-primary:   var(--amplify-colors-neutral-40);
   --amplify-colors-border-secondary: var(--amplify-colors-neutral-20);
-  --amplify-colors-border-tertiary: var(--amplify-colors-neutral-10);
-  --amplify-colors-background-secondary: var(--amplify-colors-brand-primary-10);
-  
-  --amplify-radii-small: 4px;
-  --amplify-radii-medium: 6px;
-  --amplify-radii-large: 8px;
-  
-  --amplify-space-small: 0.75rem;
+  --amplify-colors-border-tertiary:  var(--amplify-colors-neutral-10);
+
+  /* Fondo general del contenedor secundario (tarjetas, etc.) */
+  --amplify-colors-background-secondary: var(--mt-primary-10);
+
+  /* Radios más suaves para que se vea más amigable */
+  --amplify-radii-small:  6px;
+  --amplify-radii-medium: 10px;
+  --amplify-radii-large:  16px;
+
+  /* Espaciados */
+  --amplify-space-small:  0.75rem;
   --amplify-space-medium: 1rem;
-  --amplify-space-large: 1.5rem;
-  
-  --amplify-border-widths-small: 1px;
+  --amplify-space-large:  1.5rem;
+
+  /* Grosor de bordes */
+  --amplify-border-widths-small:  1px;
   --amplify-border-widths-medium: 2px;
-  --amplify-border-widths-large: 4px;
+  --amplify-border-widths-large:  3px;
 }
 
+/* Estilos específicos del Authenticator */
 [data-amplify-authenticator] {
-  --amplify-components-authenticator-router-box-shadow: 0 0 40px var(--amplify-colors-shadow-primary);
+  /* Contenedor principal */
+  --amplify-components-authenticator-router-box-shadow: 0 18px 45px var(--amplify-colors-shadow-primary);
   --amplify-components-authenticator-router-border-width: 0rem;
   --amplify-components-authenticator-router-border-color: var(--amplify-colors-brand-primary-60);
-  --amplify-components-authenticator-form-padding: var(--amplify-space-medium) var(--amplify-space-xl) var(--amplify-space-xl);
-  
-  /* Button Default */
-  --amplify-components-button-primary-background-color: var(--amplify-colors-brand-primary-20);
-  --amplify-components-button-primary-color: white;
-  
-  /* Button Hover */
+  --amplify-components-authenticator-router-background-color: #ffffff;
+
+  /* Padding del formulario */
+  --amplify-components-authenticator-form-padding: var(--amplify-space-large) var(--amplify-space-large) 2.25rem;
+
+  /* Fondo general (si usas el Authenticator en página completa) */
+  --amplify-components-authenticator-background-color: linear-gradient(
+    135deg,
+    #f3f4f6 0%,
+    var(--mt-primary-10) 45%,
+    #ffffff 100%
+  );
+
+  /* Botón primario (Login / Continuar) */
+  --amplify-components-button-primary-background-color: var(--amplify-colors-brand-primary-60);
+  --amplify-components-button-primary-color: #ffffff;
+
+  /* Hover */
   --amplify-components-button-primary-hover-background-color: var(--amplify-colors-brand-primary-80);
-  --amplify-components-button-primary-hover-color: white;
-  
-  /* Button Pressed (Active) */
-  --amplify-components-button-primary-active-background-color: var(--amplify-colors-brand-primary-100);
-  --amplify-components-button-primary-active-color: white;
+  --amplify-components-button-primary-hover-color: #ffffff;
+
+  /* Active */
+  --amplify-components-button-primary-active-background-color: var(--amplify-colors-brand-primary-90);
+  --amplify-components-button-primary-active-color: #ffffff;
   --amplify-components-button-primary-active-transform: scale(0.98);
-  
-  /* Button Focused */
+
+  /* Focus */
   --amplify-components-button-primary-focus-background-color: var(--amplify-colors-brand-primary-60);
-  --amplify-components-button-primary-focus-border-color: var(--amplify-colors-brand-primary-90);
-  --amplify-components-button-primary-focus-box-shadow: 0 0 0 2px rgba(226, 47, 136, 0.3);
-  
-  /* Button Disabled */
-  --amplify-components-button-primary-disabled-background-color: var(--amplify-colors-brand-primary-10);
-  --amplify-components-button-primary-disabled-color: rgba(255, 255, 255, 0.8);
+  --amplify-components-button-primary-focus-border-color: var(--mt-primary-40);
+  --amplify-components-button-primary-focus-box-shadow:
+    0 0 0 2px rgba(0, 152, 184, 0.35);
+
+  /* Disabled */
+  --amplify-components-button-primary-disabled-background-color: var(--amplify-colors-brand-primary-20);
+  --amplify-components-button-primary-disabled-color: rgba(255, 255, 255, 0.9);
   --amplify-components-button-primary-disabled-opacity: 0.6;
-  
-  --amplify-components-fieldcontrol-focus-box-shadow: 0 0 0 2px var(--amplify-colors-brand-primary-60);
-  
-  --amplify-components-tabs-item-border-color: var(--amplify-colors-neutral-60);
-  --amplify-components-tabs-item-color: var(--amplify-colors-brand-primary-10);
-  --amplify-components-tabs-item-active-border-color: var(--amplify-colors-brand-primary-10);
+
+  /* Inputs */
+  --amplify-components-fieldcontrol-focus-box-shadow: 0 0 0 2px
+    rgba(0, 152, 184, 0.4);
+
+  /* Tabs (Login / Registro, si los hubiera) */
+  --amplify-components-tabs-item-border-color: var(--amplify-colors-neutral-30);
+  --amplify-components-tabs-item-color: var(--mt-accent-60);
+  --amplify-components-tabs-item-active-border-color: var(--amplify-colors-brand-primary-60);
   --amplify-components-tabs-item-active-color: var(--amplify-colors-brand-primary-80);
-  
-  --amplify-components-button-link-color: var(--amplify-colors-brand-primary-20);
+
+  /* Enlaces secundarios (¿Olvidaste tu contraseña?, etc.) */
+  --amplify-components-button-link-color: var(--amplify-colors-brand-primary-60);
   --amplify-components-button-link-hover-color: var(--amplify-colors-brand-primary-80);
   --amplify-components-button-link-active-color: var(--amplify-colors-brand-primary-100);
 }
 
-/* Custom styles for button states - these will override and complement the CSS variables */
+/* Estados del botón primario */
 .amplify-button[data-variation="primary"] {
-  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  transition:
+    background-color 0.18s ease,
+    transform 0.08s ease,
+    box-shadow 0.18s ease;
+  border-radius: var(--amplify-radii-medium);
+  font-weight: 600;
 }
 
 .amplify-button[data-variation="primary"]:hover {
   background-color: var(--amplify-components-button-primary-hover-background-color);
+  box-shadow: 0 6px 18px rgba(0, 152, 184, 0.35);
 }
 
 .amplify-button[data-variation="primary"]:active {
   background-color: var(--amplify-components-button-primary-active-background-color);
   transform: var(--amplify-components-button-primary-active-transform);
+  box-shadow: 0 2px 10px rgba(0, 91, 112, 0.45);
 }
 
 .amplify-button[data-variation="primary"]:focus-visible {
@@ -105,4 +152,5 @@
   color: var(--amplify-components-button-primary-disabled-color);
   opacity: var(--amplify-components-button-primary-disabled-opacity);
   cursor: not-allowed;
+  box-shadow: none;
 }
