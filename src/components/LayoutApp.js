@@ -26,11 +26,14 @@ import ArchitectureDiagramDialog from "./ArchitectureDiagramDialog";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { signOut, fetchUserAttributes, getCurrentUser } from "aws-amplify/auth";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 function LayoutApp() {
   const [userName, setUserName] = React.useState("Guest User");
   const [email, setEmail] = useState("");
   const [open, setOpen] = React.useState(false);
+  // 👇 nuevo: token para indicar que hay que limpiar el chat
+  const [clearChatToken, setClearChatToken] = useState(0);
 
   const effectRan = useRef(false);
   useEffect(() => {
@@ -72,15 +75,50 @@ function LayoutApp() {
 
     return () => (effectRan.current = true);
   }, []);
-
+// CREACIÓN DE TEMA DE COLORES
   const defaultTheme = createTheme({
     palette: {
       primary: {
-        main: "#44B8AC",
+        main: "#21b2d0",   /* Cian brillante */
+        light: "#60a5fa",  // azul claro para hovers
+        dark: "#007a94",   /* Azul turquesa INTENSO */
+        contrastText: "#ffffff",
       },
       secondary: {
-        main: "#56c9a6",
+        main: "#000000",   // Texto en medio
+        light: "#a5b4fc",
+        dark: "#4f46e5",
+        contrastText: "#ffffff",
       },
+      background: {
+        default: "#f3f4f6", // fondo gris suave
+        paper: "#ffffff",   // tarjetas blancas
+      },
+      text: {
+        primary: "#111827",   // gris casi negro
+        secondary: "#4b5563", // gris medio
+      },
+      divider: "#e5e7eb",
+    },
+    typography: {
+      fontFamily: [
+        "Open Sans",
+        "system-ui",
+        "-apple-system",
+        "BlinkMacSystemFont",
+        "Segoe UI",
+        "sans-serif",
+      ].join(","),
+      h6: {
+        fontWeight: 600,
+        letterSpacing: "-0.02em",
+      },
+      body1: {
+        fontSize: "0.95rem",
+      },
+    },
+    shape: {
+      borderRadius: 10,
     },
   });
 
@@ -110,19 +148,18 @@ function LayoutApp() {
         position="static"
         elevation={0}
         sx={(theme) => ({
-          bgcolor: alpha(theme.palette.secondary.main, 0.04),
-          borderBottom: 1,
-          borderColor: alpha(theme.palette.secondary.main, 0.1),
+          background: `linear-gradient(90deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+          borderBottom: `1px solid ${alpha(theme.palette.primary.dark, 0.35)}`,
         })}
       >
         <Toolbar sx={{ minHeight: { xs: 56, sm: 64 }, px: { xs: 2, sm: 3 } }}>
           <Typography
             variant="h6"
-            color="primary"
             sx={{
               flexGrow: 1,
               fontSize: { xs: "1.1rem", sm: "1.25rem" },
               fontWeight: 600,
+              color: "#ffffff",
             }}
           >
             {APP_NAME}
@@ -136,11 +173,23 @@ function LayoutApp() {
               gap: 1.5,
             }}
           >
-            <Typography variant="body1">{userName}</Typography>
+          <Typography variant="body1" sx={{ color: "#e5e7eb" }}>
+            {userName}
+          </Typography>
+
+            {/* BOTÓN LIMPIAR CHAT */}
+            <IconButton
+              onClick={() => setClearChatToken((t) => t + 1)}
+              size="small"
+              sx={{ color: "#e5e7eb" }}
+            >
+              <DeleteOutlineIcon fontSize="small" />
+            </IconButton>
+
             <IconButton
               onClick={handleSignOut}
               size="small"
-              sx={{ color: "primary.main" }}
+              sx={{ color: "#e5e7eb" }}
             >
               <LogoutIcon fontSize="small" />
             </IconButton>
@@ -161,7 +210,7 @@ function LayoutApp() {
         </Toolbar>
       </AppBar>
       <Container disableGutters maxWidth="xl" component="main">
-        <Chat userName={userName} />
+        <Chat userName={userName} clearChatToken={clearChatToken}/>
       </Container>
       <Box textAlign={"center"}>
         <Typography

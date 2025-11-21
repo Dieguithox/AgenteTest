@@ -30,14 +30,57 @@ import {
 } from "../utils/AwsCalls";
 import MarkdownRenderer from "./MarkdownRenderer.js";
 
-const Chat = ({ userName = "Guest User" }) => {
-  const [totalAnswers, setTotalAnswers] = React.useState(0);
+const STORAGE_KEY = "mtc_chat_state";
+
+function loadInitialChatState() {
+  const empty = {
+    answers: [],
+    controlAnswers: [],
+    totalAnswers: 0,
+    sessionId: uuidv4(),
+  };
+
+  if (typeof window === "undefined") return empty;
+
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return empty;
+
+    const parsed = JSON.parse(raw);
+
+    return {
+      answers: Array.isArray(parsed.answers) ? parsed.answers : [],
+      controlAnswers: Array.isArray(parsed.controlAnswers)
+        ? parsed.controlAnswers
+        : [],
+      totalAnswers:
+        typeof parsed.totalAnswers === "number" ? parsed.totalAnswers : 0,
+      sessionId:
+        typeof parsed.sessionId === "string" && parsed.sessionId.length > 0
+          ? parsed.sessionId
+          : uuidv4(),
+    };
+  } catch (e) {
+    console.error("Error leyendo estado inicial del chat", e);
+    return empty;
+  }
+}
+
+const Chat = ({ userName = "Guest User", clearChatToken }) => {
+  // ---- estado principal con restauración desde localStorage ----
+  const initialState = loadInitialChatState();
+
+  const [totalAnswers, setTotalAnswers] = React.useState(
+    initialState.totalAnswers
+  );
   const [enabled, setEnabled] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
-  const [controlAnswers, setControlAnswers] = React.useState([]);
-  const [answers, setAnswers] = React.useState([]);
+  const [controlAnswers, setControlAnswers] = React.useState(
+    initialState.controlAnswers
+  );
+  const [answers, setAnswers] = React.useState(initialState.answers);
   const [query, setQuery] = React.useState("");
-  const [sessionId, setSessionId] = React.useState(uuidv4());
+  const [sessionId, setSessionId] = React.useState(initialState.sessionId);
   const [errorMessage, setErrorMessage] = React.useState("");
   const [height, setHeight] = React.useState(480);
   const [openAnswerDetails, setOpenAnswerDetails] = React.useState(false);
@@ -47,6 +90,37 @@ const Chat = ({ userName = "Guest User" }) => {
   const borderRadius = 8;
 
   const scrollRef = useRef(null);
+
+  // Persistir en localStorage cada vez que cambie el estado del chat
+  useEffect(() => {
+    try {
+      const stateToSave = {
+        answers,
+        controlAnswers,
+        totalAnswers,
+        sessionId,
+      };
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+    } catch (e) {
+      console.error("Error guardando estado del chat", e);
+    }
+  }, [answers, controlAnswers, totalAnswers, sessionId]);
+
+  // Limpiar chat cuando cambie el token que viene de LayoutApp
+  useEffect(() => {
+    if (!clearChatToken) return; // al inicio es 0, no hace nada
+
+    setAnswers([]);
+    setControlAnswers([]);
+    setTotalAnswers(0);
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {
+      console.error("Error limpiando estado del chat", e);
+    }
+  }, [clearChatToken]);
+
+  // scroll automático al final
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
@@ -75,9 +149,7 @@ const Chat = ({ userName = "Guest User" }) => {
       const fetchData = async () => {
         console.log("Chat");
       };
-      fetchData()
-        // catch any error
-        .catch(console.error);
+      fetchData().catch(console.error);
     }
     return () => (effectRan.current = true);
   }, []);
@@ -356,7 +428,7 @@ const Chat = ({ userName = "Guest User" }) => {
                                   opacity: 0.8,
                                   "&.MuiBox-root": {
                                     animation:
-                                      "fadeIn 0.9s ease-in-out forwards",
+                                      "fadeIn 0.9s.ease-in-out.forwards",
                                   },
                                   transform: "translateY(10px)",
                                   "&.MuiBox-root-appear": {
@@ -567,14 +639,8 @@ const Chat = ({ userName = "Guest User" }) => {
                         mb: 1.5,
                         mr: 1,
                         boxShadow: "rgba(0, 0, 0, 0.05) 0px 4px 12px",
-                        border: `1px solid ${alpha(
-                          theme.palette.secondary.main,
-                          0.15
-                        )}`,
-                        backgroundColor: alpha(
-                          theme.palette.secondary.main,
-                          0.1
-                        ),
+                        border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.08),
                       })}
                     >
                       <Typography
@@ -616,7 +682,7 @@ const Chat = ({ userName = "Guest User" }) => {
               <Box sx={{ mb: 4 }}>
                 <img
                   src="/images/amazon_bedrock_agents.png"
-                  alt="Agents for Amazon Bedrock"
+                  alt="Agentes MTCenter"
                   height={96}
                   style={{ opacity: 0.9 }}
                 />
@@ -656,10 +722,10 @@ const Chat = ({ userName = "Guest User" }) => {
                   px: 3,
                   py: 2,
                   border: `1px solid ${alpha(
-                    theme.palette.secondary.main,
-                    0.15
+                    theme.palette.primary.main, // usa el turquesa
+                    0.18
                   )}`,
-                  backgroundColor: alpha(theme.palette.secondary.main, 0.1),
+                  backgroundColor: alpha(theme.palette.primary.light, 0.08), // fondo muy suave
                 })}
               >
                 <Typography
@@ -670,7 +736,7 @@ const Chat = ({ userName = "Guest User" }) => {
                     lineHeight: 1.4,
                   }}
                 >
-                  {WELCOME_MESSAGE}
+                  {WELCOME_MESSAGE} {/*Mensaje incial Soy tu asistente personal del área comercial */}
                 </Typography>
               </Box>
             </Box>
