@@ -24,7 +24,6 @@ yarn-error.log*
 
 package-lock.json
 src/env.js
-amplify
 
 #amplify-do-not-edit-begin
 amplify/\#current-cloud-backend

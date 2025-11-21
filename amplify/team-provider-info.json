@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-amplifyvideogamessal-dev-96dd2-authRole",
+      "UnauthRoleArn": "arn:aws:iam::130313634534:role/amplify-amplifyvideogamessal-dev-96dd2-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::130313634534:role/amplify-amplifyvideogamessal-dev-96dd2-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-amplifyvideogamessal-dev-96dd2-deployment",
+      "UnauthRoleName": "amplify-amplifyvideogamessal-dev-96dd2-unauthRole",
+      "StackName": "amplify-amplifyvideogamessal-dev-96dd2",
+      "StackId": "arn:aws:cloudformation:us-east-1:130313634534:stack/amplify-amplifyvideogamessal-dev-96dd2/93f75380-be86-11f0-9fde-0e13cb51183b",
+      "AmplifyAppId": "d3najf937thpxm"
+    },
+    "categories": {
+      "auth": {
+        "amplifyvideogamessalbd194cab": {}
+      }
+    }
+  }
+}
