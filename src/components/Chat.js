@@ -553,7 +553,7 @@ const Chat = ({ userName = "Guest User", clearChatToken }) => {
                                       onClick={handleShowTab(index, "chart")}
                                       startIcon={<InsightsOutlinedIcon />}
                                     >
-                                      Chart
+                                      Gráfica
                                     </Button>
                                   )}
                               </Box>
@@ -574,7 +574,7 @@ const Chat = ({ userName = "Guest User", clearChatToken }) => {
                                 color="secondaryText"
                                 sx={{ ml: 1 }}
                               >
-                                Generating chart...
+                                Generando gráfico...
                               </Typography>
                             </Box>
                           )}

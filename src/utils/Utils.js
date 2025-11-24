@@ -1,11 +1,14 @@
 export const extractBetweenTags = (string, tag) => {
   const startTag = `<${tag}>`;
   const endTag = `</${tag}>`;
-  const startIndex = string.indexOf(startTag) + startTag.length;
+
+  const rawStart = string.indexOf(startTag);
+  if (rawStart === -1) return "";
+
+  const startIndex = rawStart + startTag.length;
   const endIndex = string.indexOf(endTag, startIndex);
-  if (startIndex === -1 || endIndex === -1) {
-    return "";
-  }
+  if (endIndex === -1) return "";
+
   return string.slice(startIndex, endIndex);
 };
 
@@ -21,25 +24,59 @@ export const removeCharFromStartAndEnd = (str, charToRemove) => {
   return str;
 };
 
-export const handleFormatter = (obj) => {
-  if (typeof obj === "object" && obj !== null) {
-    for (let key in obj) {
-      if (typeof obj[key] === "string") {
-        if (
-          key === "formatter" &&
-          (obj[key] === "%" || obj[key].startsWith("$"))
-        ) {
-          handleFormatter(obj[key]);
-          // Convert the function string to an actual function
-        } else if (key === "formatter") {
-          obj[key] = new Function("return " + obj[key])();
-        } else {
-          handleFormatter(obj[key]);
-        }
-      } else if (typeof obj[key] === "object") {
-        handleFormatter(obj[key]);
+// ----------------------------
+// Función de formato MXN
+// ----------------------------
+const currencyFormatterMx = (val) => {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    maximumFractionDigits: 0,
+  }).format(val);
+};
+
+// ----------------------------
+// Conversor seguro de formatter
+// ----------------------------
+export const handleFormatter = (config) => {
+  if (!config || typeof config !== "object") return config;
+
+  const visit = (node) => {
+    if (!node || typeof node !== "object") return;
+
+    Object.keys(node).forEach((key) => {
+      const value = node[key];
+
+      // Recurse nested objects
+      if (value && typeof value === "object") {
+        visit(value);
+        return;
       }
-    }
-  }
-  return obj;
+
+      // Only operate on string values
+      if (typeof value !== "string") return;
+
+      const trimmed = value.trim();
+
+      // 1) Token "currency_mxn"
+      if (trimmed === "currency_mxn") {
+        node[key] = currencyFormatterMx;
+        return;
+      }
+
+      // 2) Only eval if it is a real JS function string
+      if (trimmed.startsWith("function")) {
+        try {
+          // eslint-disable-next-line no-eval
+          node[key] = eval(`(${trimmed})`);
+        } catch (err) {
+          console.error("Error al convertir formatter:", trimmed, err);
+          node[key] = value; // Leave safe fallback
+        }
+      }
+    });
+  };
+
+  visit(config);
+  return config;
 };

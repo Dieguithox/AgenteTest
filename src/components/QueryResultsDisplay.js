@@ -137,7 +137,7 @@ const QueryResultsDisplay = ({ index, answer }) => {
                     color="text.secondary"
                     sx={{ mr: 1 }}
                   >
-                    SQL Query:
+                    Consulta SQL:
                   </Typography>
                   <Tooltip title={copied ? "Copied!" : "Copy query"}>
                     <IconButton

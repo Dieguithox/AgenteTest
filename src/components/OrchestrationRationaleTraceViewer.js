@@ -114,7 +114,7 @@ const OrchestrationRationaleTraceViewer = ({ traces }) => {
           </Box>
         ))
       ) : (
-        <p>No rationale or queries found in the traces.</p>
+        <p>No se han encontrado justificaciones ni consultas en los registros.</p>
       )}
     </Box>
   );

@@ -334,33 +334,48 @@ export const generateChart = async (answer) => {
     const has_chart = parseInt(extractBetweenTags(responseBody, "has_chart"));
 
     if (has_chart) {
-      const chartConfig = JSON.parse(
-        extractBetweenTags(responseBody, "chart_configuration")
-      );
-      const chart = {
-        chart_type: removeCharFromStartAndEnd(
-          extractBetweenTags(responseBody, "chart_type"),
-          "\n"
-        ),
-        chart_configuration: handleFormatter(chartConfig),
-        caption: removeCharFromStartAndEnd(
-          extractBetweenTags(responseBody, "caption"),
-          "\n"
-        ),
-      };
+    const rawChartConfig = extractBetweenTags(responseBody, "chart_configuration");
 
-      console.log("------- Final chart generation -------");
-      console.log(chart);
+    // 🧹 Limpieza mínima para evitar reventar si mete cosas tipo Array(30).fill(...)
+    let cleanedChartConfig = rawChartConfig
+      // Si llega a usar Array(n).fill(x), lo convertimos a un arreglo vacío en lugar de romper
+      .replace(/Array\([^)]*\)\.fill\([^)]*\)/g, "[]");
 
-      return chart;
-    } else {
+    let chartConfig;
+    try {
+      chartConfig = JSON.parse(cleanedChartConfig);
+    } catch (e) {
+      console.error("Error parseando chart_configuration", e, rawChartConfig);
       return {
-        rationale: removeCharFromStartAndEnd(
-          extractBetweenTags(responseBody, "rationale"),
-          "\n"
-        ),
+        rationale: "Error al analizar la configuración de la gráfica.",
       };
     }
+
+    const chart = {
+      chart_type: removeCharFromStartAndEnd(
+        extractBetweenTags(responseBody, "chart_type"),
+        "\n"
+      ),
+      // 👇 aquí sigues usando tu helper normal
+      chart_configuration: handleFormatter(chartConfig),
+      caption: removeCharFromStartAndEnd(
+        extractBetweenTags(responseBody, "caption"),
+        "\n"
+      ),
+    };
+
+    console.log("------- Final chart generation -------");
+    console.log(chart);
+
+    return chart;
+  } else {
+    return {
+      rationale: removeCharFromStartAndEnd(
+        extractBetweenTags(responseBody, "rationale"),
+        "\n"
+      ),
+    };
+  }
   } catch (error) {
     console.error("Error al generar el gráfico:", error);
     return {
