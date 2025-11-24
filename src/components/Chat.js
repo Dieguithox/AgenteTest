@@ -468,7 +468,7 @@ const Chat = ({ userName = "Guest User", clearChatToken }) => {
                             onClick={handleClickOpenAnswerDetails(index)}
                             startIcon={<PsychologyRoundedIcon />}
                           >
-                            Details
+                            Detalles
                           </Button>
 
                           {answer.queryResults.length > 0 && (
@@ -501,7 +501,7 @@ const Chat = ({ userName = "Guest User", clearChatToken }) => {
                                   onClick={handleShowTab(index, "answer")}
                                   startIcon={<QuestionAnswerOutlinedIcon />}
                                 >
-                                  Answer
+                                  Respuesta
                                 </Button>
 
                                 <Button
@@ -526,7 +526,7 @@ const Chat = ({ userName = "Guest User", clearChatToken }) => {
                                   onClick={handleShowTab(index, "records")}
                                   startIcon={<TableRowsRoundedIcon />}
                                 >
-                                  Records
+                                  Registros
                                 </Button>
 
                                 {typeof answer.chart === "object" &&

@@ -28,7 +28,6 @@ import {
  * @returns {Promise<Object>} - The query response
  */
 export const getQueryResults = async (queryUuid = "") => {
-  // 👉 si no usas DynamoDB, salimos limpio
   if (!QUESTION_ANSWERS_TABLE_NAME) {
     console.log(
       "[getQueryResults] QUESTION_ANSWERS_TABLE_NAME vacío, regreso []"
@@ -106,7 +105,7 @@ export const invokeBedrockAgent = async (
           queryUuid: queryUuid,
         },
       },
-      enableTrace: false,
+      enableTrace: true,
       streamingConfigurations: { streamFinalResponse: true },
     };
 
@@ -363,9 +362,9 @@ export const generateChart = async (answer) => {
       };
     }
   } catch (error) {
-    console.error("Chart generation failed:", error);
+    console.error("Error al generar el gráfico:", error);
     return {
-      rationale: "Error generating or parsing chart data.",
+      rationale: "Error al generar o analizar los datos del gráfico.",
     };
   }
 };

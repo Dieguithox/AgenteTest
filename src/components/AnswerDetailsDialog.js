@@ -22,7 +22,7 @@ const AnswerDetailsDialog = ({ answer, question, handleClose, open }) => {
       open={open}
       onClose={handleClose}
     >
-      <DialogTitle>Answer Details</DialogTitle>
+      <DialogTitle>Detalles de la respuesta</DialogTitle>
       <DialogContent>
         <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
           <Grid size={{ sm: 12, md: 12, xs: 6, md: 6 }}>
@@ -33,7 +33,7 @@ const AnswerDetailsDialog = ({ answer, question, handleClose, open }) => {
                 sx={{ fontWeight: "bold" }}
                 gutterBottom
               >
-                Question
+                Pregunta
               </Typography>
               {question}
             </Box>
@@ -44,7 +44,7 @@ const AnswerDetailsDialog = ({ answer, question, handleClose, open }) => {
                 sx={{ fontWeight: "bold" }}
                 gutterBottom
               >
-                Answer
+                Respuesta
               </Typography>
               <Typography component="div" variant="body1">
                 <MarkdownRenderer content={answer.text} />
@@ -68,7 +68,7 @@ const AnswerDetailsDialog = ({ answer, question, handleClose, open }) => {
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Close</Button>
+        <Button onClick={handleClose}>Cerrra</Button>
       </DialogActions>
     </Dialog>
   );
