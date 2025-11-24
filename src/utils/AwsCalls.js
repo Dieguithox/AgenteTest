@@ -12,6 +12,7 @@ import {
   extractBetweenTags,
   removeCharFromStartAndEnd,
   handleFormatter,
+  applyDefaultToolbar,
 } from "./Utils.js";
 import {
   AGENT_ID,
@@ -331,51 +332,66 @@ export const generateChart = async (answer) => {
     console.log(responseBody);
 
     // Process the response
-    const has_chart = parseInt(extractBetweenTags(responseBody, "has_chart"));
+    const has_chart = parseInt(
+      extractBetweenTags(responseBody, "has_chart"),
+      10
+    );
 
     if (has_chart) {
-    const rawChartConfig = extractBetweenTags(responseBody, "chart_configuration");
+      // 1) Extraer el JSON como texto
+      const rawChartConfig = extractBetweenTags(
+        responseBody,
+        "chart_configuration"
+      );
 
-    // 🧹 Limpieza mínima para evitar reventar si mete cosas tipo Array(30).fill(...)
-    let cleanedChartConfig = rawChartConfig
-      // Si llega a usar Array(n).fill(x), lo convertimos a un arreglo vacío en lugar de romper
-      .replace(/Array\([^)]*\)\.fill\([^)]*\)/g, "[]");
+      // 2) Limpieza mínima para que no truene si viene algo como Array(30).fill(...)
+      const cleanedChartConfig = rawChartConfig.replace(
+        /Array\([^)]*\)\.fill\([^)]*\)/g,
+        "[]"
+      );
 
-    let chartConfig;
-    try {
-      chartConfig = JSON.parse(cleanedChartConfig);
-    } catch (e) {
-      console.error("Error parseando chart_configuration", e, rawChartConfig);
+      let configObj;
+      try {
+        configObj = JSON.parse(cleanedChartConfig);
+      } catch (e) {
+        console.error(
+          "Error parseando chart_configuration",
+          e,
+          rawChartConfig
+        );
+        return {
+          rationale: "Error al analizar la configuración de la gráfica.",
+        };
+      }
+
+      // 3) Convertir formatters + aplicar toolbar/export por defecto
+      let finalConfig = handleFormatter(configObj);
+      finalConfig = applyDefaultToolbar(finalConfig);
+
+      const chart = {
+        chart_type: removeCharFromStartAndEnd(
+          extractBetweenTags(responseBody, "chart_type"),
+          "\n"
+        ),
+        chart_configuration: finalConfig,
+        caption: removeCharFromStartAndEnd(
+          extractBetweenTags(responseBody, "caption"),
+          "\n"
+        ),
+      };
+
+      console.log("------- Final chart generation -------");
+      console.log(chart);
+
+      return chart;
+    } else {
       return {
-        rationale: "Error al analizar la configuración de la gráfica.",
+        rationale: removeCharFromStartAndEnd(
+          extractBetweenTags(responseBody, "rationale"),
+          "\n"
+        ),
       };
     }
-
-    const chart = {
-      chart_type: removeCharFromStartAndEnd(
-        extractBetweenTags(responseBody, "chart_type"),
-        "\n"
-      ),
-      // 👇 aquí sigues usando tu helper normal
-      chart_configuration: handleFormatter(chartConfig),
-      caption: removeCharFromStartAndEnd(
-        extractBetweenTags(responseBody, "caption"),
-        "\n"
-      ),
-    };
-
-    console.log("------- Final chart generation -------");
-    console.log(chart);
-
-    return chart;
-  } else {
-    return {
-      rationale: removeCharFromStartAndEnd(
-        extractBetweenTags(responseBody, "rationale"),
-        "\n"
-      ),
-    };
-  }
   } catch (error) {
     console.error("Error al generar el gráfico:", error);
     return {

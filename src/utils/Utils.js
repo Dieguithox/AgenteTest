@@ -80,3 +80,53 @@ export const handleFormatter = (config) => {
   visit(config);
   return config;
 };
+
+export const applyDefaultToolbar = (config) => {
+  if (!config || typeof config !== "object") return config;
+
+  if (!config.options) config.options = {};
+  if (!config.options.chart) config.options.chart = {};
+
+  // Asegurar toolbar
+  if (!config.options.chart.toolbar) {
+    config.options.chart.toolbar = {};
+  }
+
+  config.options.chart.toolbar.show = true;
+
+  // Asegurar herramientas básicas
+  if (!config.options.chart.toolbar.tools) {
+    config.options.chart.toolbar.tools = {};
+  }
+
+  config.options.chart.toolbar.tools = {
+    ...config.options.chart.toolbar.tools,
+    download: true,
+    selection: true,
+    zoom: true,
+    zoomin: true,
+    zoomout: true,
+    pan: true,
+    reset: true,
+  };
+
+  // Asegurar export (PNG / SVG / CSV)
+  if (!config.options.chart.toolbar.export) {
+    config.options.chart.toolbar.export = {};
+  }
+
+  config.options.chart.toolbar.export = {
+    csv: {
+      filename: "mtcenter-ventas",
+    },
+    svg: {
+      filename: "mtcenter-ventas",
+    },
+    png: {
+      filename: "mtcenter-ventas",
+    },
+    ...config.options.chart.toolbar.export,
+  };
+
+  return config;
+};
