@@ -76,7 +76,7 @@ const MyChart = ({ caption, options, series, type }) => {
         <ErrorBoundary
           fallback={
             <Alert severity="error">
-              Failed to render chart. Please check your chart configuration.
+              No se ha podido generar el gráfico. Comprueba la configuración del gráfico.
             </Alert>
           }
         >

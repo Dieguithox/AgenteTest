@@ -10,10 +10,26 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { alpha } from "@mui/material/styles";
 import OrchestrationRationaleTraceViewer from "./OrchestrationRationaleTraceViewer.js";
 import MarkdownRenderer from "./MarkdownRenderer.js";
+import {
+  extractFirstMarkdownTable,
+  markdownTableToHtml,
+  copyHtmlToClipboard,
+} from "../utils/Utils.js";
 
 const AnswerDetailsDialog = ({ answer, question, handleClose, open }) => {
   const [fullWidth, setFullWidth] = React.useState(true);
   const [maxWidth, setMaxWidth] = React.useState("xxl");
+
+const tableMd =
+  answer && typeof answer.text === "string"
+    ? extractFirstMarkdownTable(answer.text)
+    : null;
+
+const handleCopyTableHtml = async () => {
+  if (!tableMd) return;
+  const html = markdownTableToHtml(tableMd);
+  await copyHtmlToClipboard(html);
+};
 
   return (
     <Dialog
@@ -46,6 +62,26 @@ const AnswerDetailsDialog = ({ answer, question, handleClose, open }) => {
               >
                 Respuesta
               </Typography>
+
+              {/* 🔘 Botón para copiar tabla como HTML (solo si hay tabla) */}
+              {tableMd && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    mb: 1,
+                  }}
+                >
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={handleCopyTableHtml}
+                  >
+                    Copiar tabla como HTML
+                  </Button>
+                </Box>
+              )}
+
               <Typography component="div" variant="body1">
                 <MarkdownRenderer content={answer.text} />
               </Typography>

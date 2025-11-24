@@ -28,9 +28,20 @@ import {
   getQueryResults,
   generateChart,
 } from "../utils/AwsCalls";
+import {
+  extractFirstMarkdownTable,
+  markdownTableToHtml,
+  copyHtmlToClipboard,
+} from "../utils/Utils.js";
 import MarkdownRenderer from "./MarkdownRenderer.js";
 
 const STORAGE_KEY = "mtc_chat_state";
+
+const handleCopyTableHtml = async (markdownTable) => {
+  if (!markdownTable) return;
+  const html = markdownTableToHtml(markdownTable);
+  await copyHtmlToClipboard(html);
+};
 
 function loadInitialChatState() {
   const empty = {
@@ -331,93 +342,87 @@ const Chat = ({ userName = "Guest User", clearChatToken }) => {
       >
         {answers.length > 0 ? (
           <ul style={{ paddingBottom: 14, margin: 0, listStyleType: "none" }}>
-            {answers.map((answer, index) => (
-              <li key={"meg" + index} style={{ marginBottom: 0 }}>
-                {answer.hasOwnProperty("text") ? (
-                  <Box
-                    sx={{
-                      borderRadius: borderRadius,
-                      pl: 1,
-                      pr: 1,
-                      display: "flex",
-                      alignItems: "flex-start",
-                      marginBottom: 1,
-                    }}
-                  >
-                    <Box sx={{ pr: 1, pt: 1.5, pl: 0.5 }}>
-                      <img
-                        src="/images/genai.png"
-                        alt="Amazon Bedrock"
-                        width={28}
-                        height={28}
-                      />
-                    </Box>
-                    <Box sx={{ p: 0, flex: 1 }}>
-                      <Box>
-                        <Grow
-                          in={
-                            controlAnswers[index].current_tab_view === "answer"
-                          }
-                          timeout={{ enter: 600, exit: 0 }}
-                          style={{ transformOrigin: "50% 0 0" }}
-                          mountOnEnter
-                          unmountOnExit
-                        >
-                          <Box
-                            id={"answer" + index}
-                            sx={{
-                              opacity: 0.8,
-                              "&.MuiBox-root": {
-                                animation: "fadeIn 0.8s ease-in-out forwards",
-                              },
-                              mt: 1,
-                            }}
-                          >
-                            <Typography component="div" variant="body1">
-                              <MarkdownRenderer content={answer.text} />
-                            </Typography>
-                          </Box>
-                        </Grow>
+            {answers.map((answer, index) => {
+              // 🔍 Detectar primera tabla Markdown en la respuesta
+              const tableMd =
+                answer && typeof answer.text === "string"
+                  ? extractFirstMarkdownTable(answer.text)
+                  : null;
 
-                        {answer.hasOwnProperty("queryResults") && (
+              // pequeño guard para evitar errores si aún no hay controlAnswers[index]
+              const control = controlAnswers[index] || {};
+              const currentTab = control.current_tab_view || "answer";
+
+              return (
+                <li key={"meg" + index} style={{ marginBottom: 0 }}>
+                  {answer.hasOwnProperty("text") ? (
+                    <Box
+                      sx={{
+                        borderRadius: borderRadius,
+                        pl: 1,
+                        pr: 1,
+                        display: "flex",
+                        alignItems: "flex-start",
+                        marginBottom: 1,
+                      }}
+                    >
+                      <Box sx={{ pr: 1, pt: 1.5, pl: 0.5 }}>
+                        <img
+                          src="/images/genai.png"
+                          alt="Amazon Bedrock"
+                          width={28}
+                          height={28}
+                        />
+                      </Box>
+                      <Box sx={{ p: 0, flex: 1 }}>
+                        <Box>
+                          {/* 🧩 Pestaña Respuesta */}
                           <Grow
-                            in={
-                              controlAnswers[index].current_tab_view ===
-                              "records"
-                            }
+                            in={currentTab === "answer"}
                             timeout={{ enter: 600, exit: 0 }}
                             style={{ transformOrigin: "50% 0 0" }}
                             mountOnEnter
                             unmountOnExit
                           >
                             <Box
+                              id={"answer" + index}
                               sx={{
                                 opacity: 0.8,
                                 "&.MuiBox-root": {
                                   animation: "fadeIn 0.8s ease-in-out forwards",
                                 },
-                                transform: "translateY(10px)",
-                                "&.MuiBox-root-appear": {
-                                  transform: "translateY(0)",
-                                },
                                 mt: 1,
                               }}
                             >
-                              <QueryResultsDisplay
-                                index={index}
-                                answer={answer}
-                              />
+                              {/* 🔘 Botón copiar tabla como HTML (solo si hay tabla) */}
+                              {tableMd && (
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                    mb: 1,
+                                  }}
+                                >
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    onClick={() => handleCopyTableHtml(tableMd)}
+                                  >
+                                    Copiar tabla
+                                  </Button>
+                                </Box>
+                              )}
+
+                              <Typography component="div" variant="body1">
+                                <MarkdownRenderer content={answer.text} />
+                              </Typography>
                             </Box>
                           </Grow>
-                        )}
 
-                        {answer.hasOwnProperty("chart") &&
-                          answer.chart.hasOwnProperty("chart_type") && (
+                          {/* 🧩 Pestaña Registros */}
+                          {answer.hasOwnProperty("queryResults") && (
                             <Grow
-                              in={
-                                controlAnswers[index].current_tab_view ===
-                                "chart"
-                              }
+                              in={currentTab === "records"}
                               timeout={{ enter: 600, exit: 0 }}
                               style={{ transformOrigin: "50% 0 0" }}
                               mountOnEnter
@@ -427,8 +432,7 @@ const Chat = ({ userName = "Guest User", clearChatToken }) => {
                                 sx={{
                                   opacity: 0.8,
                                   "&.MuiBox-root": {
-                                    animation:
-                                      "fadeIn 0.9s.ease-in-out.forwards",
+                                    animation: "fadeIn 0.8s ease-in-out forwards",
                                   },
                                   transform: "translateY(10px)",
                                   "&.MuiBox-root-appear": {
@@ -437,226 +441,249 @@ const Chat = ({ userName = "Guest User", clearChatToken }) => {
                                   mt: 1,
                                 }}
                               >
-                                <MyChart
-                                  caption={answer.chart.caption}
-                                  options={
-                                    answer.chart.chart_configuration.options
-                                  }
-                                  series={
-                                    answer.chart.chart_configuration.series
-                                  }
-                                  type={answer.chart.chart_type}
-                                />
+                                <QueryResultsDisplay index={index} answer={answer} />
                               </Box>
                             </Grow>
                           )}
-                      </Box>
 
-                      {answer.hasOwnProperty("queryResults") && (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "flex-start",
-                            gap: 1,
-                            py: 1,
-                            mt: 1,
-                          }}
-                        >
-                          <Button
-                            color="secondary"
-                            onClick={handleClickOpenAnswerDetails(index)}
-                            startIcon={<PsychologyRoundedIcon />}
+                          {/* 🧩 Pestaña Gráfica */}
+                          {answer.hasOwnProperty("chart") &&
+                            typeof answer.chart === "object" &&
+                            answer.chart.hasOwnProperty("chart_type") && (
+                              <Grow
+                                in={currentTab === "chart"}
+                                timeout={{ enter: 600, exit: 0 }}
+                                style={{ transformOrigin: "50% 0 0" }}
+                                mountOnEnter
+                                unmountOnExit
+                              >
+                                <Box
+                                  sx={{
+                                    opacity: 0.8,
+                                    "&.MuiBox-root": {
+                                      animation: "fadeIn 0.9s.ease-in-out.forwards",
+                                    },
+                                    transform: "translateY(10px)",
+                                    "&.MuiBox-root-appear": {
+                                      transform: "translateY(0)",
+                                    },
+                                    mt: 1,
+                                  }}
+                                >
+                                  <MyChart
+                                    caption={answer.chart.caption}
+                                    options={answer.chart.chart_configuration.options}
+                                    series={answer.chart.chart_configuration.series}
+                                    type={answer.chart.chart_type}
+                                  />
+                                </Box>
+                              </Grow>
+                            )}
+                        </Box>
+
+                        {/* 🔘 Zona de botones Respuesta / Registros / Gráfica */}
+                        {answer.hasOwnProperty("queryResults") && (
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "flex-start",
+                              gap: 1,
+                              py: 1,
+                              mt: 1,
+                            }}
                           >
-                            Detalles
-                          </Button>
-
-                          {answer.queryResults.length > 0 && (
-                            <Fade
-                              timeout={1000}
-                              in={answer.queryResults.length > 0}
+                            <Button
+                              color="secondary"
+                              onClick={handleClickOpenAnswerDetails(index)}
+                              startIcon={<PsychologyRoundedIcon />}
                             >
+                              Detalles
+                            </Button>
+
+                            {answer.queryResults.length > 0 && (
+                              <Fade
+                                timeout={1000}
+                                in={answer.queryResults.length > 0}
+                              >
+                                <Box
+                                  sx={{ display: "flex", alignItems: "center" }}
+                                >
+                                  <Button
+                                    sx={(theme) => ({
+                                      pr: 1,
+                                      pl: 1,
+                                      "&.Mui-disabled": {
+                                        borderBottom: 0.5,
+                                        color: theme.palette.primary.main,
+                                        borderRadius: 0,
+                                      },
+                                    })}
+                                    data-amplify-analytics-on="click"
+                                    data-amplify-analytics-name="click"
+                                    data-amplify-analytics-attrs="button:answer-details"
+                                    size="small"
+                                    color="secondaryText"
+                                    disabled={currentTab === "answer"}
+                                    onClick={handleShowTab(index, "answer")}
+                                    startIcon={<QuestionAnswerOutlinedIcon />}
+                                  >
+                                    Respuesta
+                                  </Button>
+
+                                  <Button
+                                    sx={(theme) => ({
+                                      pr: 1,
+                                      pl: 1,
+                                      "&.Mui-disabled": {
+                                        borderBottom: 0.5,
+                                        color: theme.palette.primary.main,
+                                        borderRadius: 0,
+                                      },
+                                    })}
+                                    data-amplify-analytics-on="click"
+                                    data-amplify-analytics-name="click"
+                                    data-amplify-analytics-attrs="button:answer-details"
+                                    size="small"
+                                    color="secondaryText"
+                                    disabled={currentTab === "records"}
+                                    onClick={handleShowTab(index, "records")}
+                                    startIcon={<TableRowsRoundedIcon />}
+                                  >
+                                    Registros
+                                  </Button>
+
+                                  {typeof answer.chart === "object" &&
+                                    answer.chart.hasOwnProperty("chart_type") && (
+                                      <Button
+                                        sx={(theme) => ({
+                                          pr: 1,
+                                          pl: 1,
+                                          "&.Mui-disabled": {
+                                            borderBottom: 0.5,
+                                            color: theme.palette.primary.main,
+                                            borderRadius: 0,
+                                          },
+                                        })}
+                                        data-amplify-analytics-on="click"
+                                        data-amplify-analytics-name="click"
+                                        data-amplify-analytics-attrs="button:answer-details"
+                                        size="small"
+                                        color="secondaryText"
+                                        disabled={currentTab === "chart"}
+                                        onClick={handleShowTab(index, "chart")}
+                                        startIcon={<InsightsOutlinedIcon />}
+                                      >
+                                        Gráfica
+                                      </Button>
+                                    )}
+                                </Box>
+                              </Fade>
+                            )}
+
+                            {answer.chart === "loading" && (
                               <Box
-                                sx={{ display: "flex", alignItems: "center" }}
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  ml: 1,
+                                }}
                               >
-                                <Button
-                                  sx={(theme) => ({
-                                    pr: 1,
-                                    pl: 1,
-                                    "&.Mui-disabled": {
-                                      borderBottom: 0.5,
-                                      color: theme.palette.primary.main,
-                                      borderRadius: 0,
-                                    },
-                                  })}
-                                  data-amplify-analytics-on="click"
-                                  data-amplify-analytics-name="click"
-                                  data-amplify-analytics-attrs="button:answer-details"
-                                  size="small"
+                                <CircularProgress size={16} color="primary" />
+                                <Typography
+                                  variant="caption"
                                   color="secondaryText"
-                                  disabled={
-                                    controlAnswers[index].current_tab_view ===
-                                    "answer"
-                                  }
-                                  onClick={handleShowTab(index, "answer")}
-                                  startIcon={<QuestionAnswerOutlinedIcon />}
+                                  sx={{ ml: 1 }}
                                 >
-                                  Respuesta
-                                </Button>
-
-                                <Button
-                                  sx={(theme) => ({
-                                    pr: 1,
-                                    pl: 1,
-                                    "&.Mui-disabled": {
-                                      borderBottom: 0.5,
-                                      color: theme.palette.primary.main,
-                                      borderRadius: 0,
-                                    },
-                                  })}
-                                  data-amplify-analytics-on="click"
-                                  data-amplify-analytics-name="click"
-                                  data-amplify-analytics-attrs="button:answer-details"
-                                  size="small"
-                                  color="secondaryText"
-                                  disabled={
-                                    controlAnswers[index].current_tab_view ===
-                                    "records"
-                                  }
-                                  onClick={handleShowTab(index, "records")}
-                                  startIcon={<TableRowsRoundedIcon />}
-                                >
-                                  Registros
-                                </Button>
-
-                                {typeof answer.chart === "object" &&
-                                  answer.chart.hasOwnProperty("chart_type") && (
-                                    <Button
-                                      sx={(theme) => ({
-                                        pr: 1,
-                                        pl: 1,
-                                        "&.Mui-disabled": {
-                                          borderBottom: 0.5,
-                                          color: theme.palette.primary.main,
-                                          borderRadius: 0,
-                                        },
-                                      })}
-                                      data-amplify-analytics-on="click"
-                                      data-amplify-analytics-name="click"
-                                      data-amplify-analytics-attrs="button:answer-details"
-                                      size="small"
-                                      color="secondaryText"
-                                      disabled={
-                                        controlAnswers[index]
-                                          .current_tab_view === "chart"
-                                      }
-                                      onClick={handleShowTab(index, "chart")}
-                                      startIcon={<InsightsOutlinedIcon />}
-                                    >
-                                      Gráfica
-                                    </Button>
-                                  )}
+                                  Generando gráfico...
+                                </Typography>
                               </Box>
-                            </Fade>
-                          )}
+                            )}
 
-                          {answer.chart === "loading" && (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                ml: 1,
-                              }}
-                            >
-                              <CircularProgress size={16} color="primary" />
-                              <Typography
-                                variant="caption"
-                                color="secondaryText"
-                                sx={{ ml: 1 }}
-                              >
-                                Generando gráfico...
-                              </Typography>
-                            </Box>
-                          )}
-
-                          {answer.chart.hasOwnProperty("rationale") && (
-                            <Typography variant="caption" color="secondaryText">
-                              {answer.chart.rationale}
-                            </Typography>
-                          )}
-                        </Box>
-                      )}
+                            {answer.chart &&
+                              typeof answer.chart === "object" &&
+                              answer.chart.hasOwnProperty("rationale") && (
+                                <Typography variant="caption" color="secondaryText">
+                                  {answer.chart.rationale}
+                                </Typography>
+                              )}
+                          </Box>
+                        )}
+                      </Box>
                     </Box>
-                  </Box>
-                ) : answer.hasOwnProperty("rationaleText") ? (
-                  <Grid container justifyContent="flex-start">
-                    <Fade timeout={2000} in={true}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          mb: 1,
-                          pl: 2,
-                          py: 1,
-                        }}
-                      >
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          <img
-                            src="/images/sun.256x256.png"
-                            width={22}
-                            height={22}
-                            style={{ opacity: 0.4 }}
-                          />
-                        </Box>
-
+                  ) : answer.hasOwnProperty("rationaleText") ? (
+                    <Grid container justifyContent="flex-start">
+                      <Fade timeout={2000} in={true}>
                         <Box
                           sx={{
-                            pl: 0.5,
-                            pr: 2,
-                            ml: 1,
                             display: "flex",
                             alignItems: "center",
-                            flexGrow: 1,
+                            mb: 1,
+                            pl: 2,
+                            py: 1,
                           }}
                         >
-                          <Typography color="text.secondary" variant="body1">
-                            {answer.rationaleText}
-                          </Typography>
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <img
+                              src="/images/sun.256x256.png"
+                              width={22}
+                              height={22}
+                              style={{ opacity: 0.4 }}
+                            />
+                          </Box>
+
+                          <Box
+                            sx={{
+                              pl: 0.5,
+                              pr: 2,
+                              ml: 1,
+                              display: "flex",
+                              alignItems: "center",
+                              flexGrow: 1,
+                            }}
+                          >
+                            <Typography color="text.secondary" variant="body1">
+                              {answer.rationaleText}
+                            </Typography>
+                          </Box>
                         </Box>
-                      </Box>
-                    </Fade>
-                  </Grid>
-                ) : (
-                  <Grid container justifyContent="flex-end">
-                    <Box
-                      sx={(theme) => ({
-                        textAlign: "right",
-                        borderRadius: borderRadius,
-                        fontWeight: 500,
-                        py: 1,
-                        px: 2,
-                        mt: 2,
-                        mb: 1.5,
-                        mr: 1,
-                        boxShadow: "rgba(0, 0, 0, 0.05) 0px 4px 12px",
-                        border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
-                        backgroundColor: alpha(theme.palette.primary.main, 0.08),
-                      })}
-                    >
-                      <Typography
-                        sx={{
-                          color: "text.primary",
-                          fontSize: "0.95rem",
+                      </Fade>
+                    </Grid>
+                  ) : (
+                    <Grid container justifyContent="flex-end">
+                      <Box
+                        sx={(theme) => ({
+                          textAlign: "right",
+                          borderRadius: borderRadius,
                           fontWeight: 500,
-                        }}
+                          py: 1,
+                          px: 2,
+                          mt: 2,
+                          mb: 1.5,
+                          mr: 1,
+                          boxShadow: "rgba(0, 0, 0, 0.05) 0px 4px 12px",
+                          border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
+                          backgroundColor: alpha(
+                            theme.palette.primary.main,
+                            0.08
+                          ),
+                        })}
                       >
-                        {answer.query}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                )}
-              </li>
-            ))}
+                        <Typography
+                          sx={{
+                            color: "text.primary",
+                            fontSize: "0.95rem",
+                            fontWeight: 500,
+                          }}
+                        >
+                          {answer.query}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  )}
+                </li>
+              );
+            })}
 
             {loading && (
               <Box sx={{ p: 0, pl: 1, mb: 2, mt: 1 }}>
@@ -664,8 +691,7 @@ const Chat = ({ userName = "Guest User", clearChatToken }) => {
               </Box>
             )}
 
-            {/* this is the last item that scrolls into
-                    view when the effect is run */}
+            {/* this is the last item that scrolls into view when the effect is run */}
             <li ref={scrollRef} />
           </ul>
         ) : (
@@ -722,10 +748,10 @@ const Chat = ({ userName = "Guest User", clearChatToken }) => {
                   px: 3,
                   py: 2,
                   border: `1px solid ${alpha(
-                    theme.palette.primary.main, // usa el turquesa
+                    theme.palette.primary.main,
                     0.18
                   )}`,
-                  backgroundColor: alpha(theme.palette.primary.light, 0.08), // fondo muy suave
+                  backgroundColor: alpha(theme.palette.primary.light, 0.08),
                 })}
               >
                 <Typography
@@ -736,7 +762,7 @@ const Chat = ({ userName = "Guest User", clearChatToken }) => {
                     lineHeight: 1.4,
                   }}
                 >
-                  {WELCOME_MESSAGE} {/*Mensaje incial Soy tu asistente personal del área comercial */}
+                  {WELCOME_MESSAGE}
                 </Typography>
               </Box>
             </Box>

@@ -64,14 +64,26 @@ export const handleFormatter = (config) => {
         return;
       }
 
-      // 2) Only eval if it is a real JS function string
+      // 2) Function normal
       if (trimmed.startsWith("function")) {
         try {
           // eslint-disable-next-line no-eval
           node[key] = eval(`(${trimmed})`);
         } catch (err) {
           console.error("Error al convertir formatter:", trimmed, err);
-          node[key] = value; // Leave safe fallback
+          node[key] = value;
+        }
+        return;
+      }
+
+      // 3) Arrow function  (val => ...)
+      if (trimmed.includes("=>")) {
+        try {
+          // eslint-disable-next-line no-eval
+          node[key] = eval(`(${trimmed})`);
+        } catch (err) {
+          console.error("Error al convertir arrow formatter:", trimmed, err);
+          node[key] = value;
         }
       }
     });
@@ -129,4 +141,70 @@ export const applyDefaultToolbar = (config) => {
   };
 
   return config;
+};
+
+// Extrae la primera tabla Markdown simple del texto
+export const extractFirstMarkdownTable = (markdown) => {
+  if (!markdown || typeof markdown !== "string") return null;
+
+  const regex =
+    /(^\s*\|.*\|\s*\n\s*\|[ \-:\|]+\|\s*\n(?:\s*\|.*\|\s*\n?)+)/m;
+
+  const match = markdown.match(regex);
+  return match ? match[1].trim() : null;
+};
+
+// Convierte una tabla markdown simple a HTML <table>
+export const markdownTableToHtml = (markdownTable) => {
+  const lines = markdownTable.trim().split("\n");
+  if (lines.length < 2) return markdownTable;
+
+  const [headerLine, separatorLine, ...dataLines] = lines;
+
+  const headers = headerLine
+    .split("|")
+    .map((h) => h.trim())
+    .filter((h) => h);
+
+  const rows = dataLines
+    .map((line) =>
+      line
+        .split("|")
+        .map((c) => c.trim())
+        .filter((c) => c)
+    )
+    .filter((cols) => cols.length);
+
+  let html = "<table><thead><tr>";
+  headers.forEach((h) => {
+    html += `<th>${h}</th>`;
+  });
+  html += "</tr></thead><tbody>";
+
+  rows.forEach((cols) => {
+    html += "<tr>";
+    cols.forEach((c) => {
+      html += `<td>${c}</td>`;
+    });
+    html += "</tr>";
+  });
+
+  html += "</tbody></table>";
+  return html;
+};
+
+// Copiar HTML al portapapeles
+export const copyHtmlToClipboard = async (html) => {
+  try {
+    if (navigator.clipboard && window.ClipboardItem) {
+      const blob = new Blob([html], { type: "text/html" });
+      const data = [new ClipboardItem({ "text/html": blob })];
+      await navigator.clipboard.write(data);
+    } else {
+      // Fallback: copia como texto plano
+      await navigator.clipboard.writeText(html);
+    }
+  } catch (err) {
+    console.error("Error al copiar HTML:", err);
+  }
 };
