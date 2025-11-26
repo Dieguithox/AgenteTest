@@ -25,9 +25,33 @@ export const removeCharFromStartAndEnd = (str, charToRemove) => {
 };
 
 // ----------------------------
-// Función de formato MXN
+// Función de formato MXN (segura)
 // ----------------------------
 const currencyFormatterMx = (val) => {
+  // Si viene null/undefined, regresamos cadena vacía
+  if (val === null || val === undefined) return "";
+
+  // Si viene un objeto tipo { y: 123 } (a veces Apex lo manda así)
+  if (typeof val === "object" && val !== null) {
+    if ("y" in val) {
+      val = val.y;
+    } else {
+      // No sabemos qué es, mejor lo dejamos como está
+      return String(val);
+    }
+  }
+
+  // Si viene como texto (por ejemplo "Cliente X"), NO lo formateamos a moneda
+  if (typeof val !== "number") {
+    const num = Number(val);
+    if (!Number.isFinite(num)) {
+      // No es un número válido → devolvemos el texto tal cual
+      return String(val);
+    }
+    val = num;
+  }
+
+  // Aquí ya estamos seguros de que es un número finito
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
     currency: "MXN",
@@ -58,33 +82,40 @@ export const handleFormatter = (config) => {
 
       const trimmed = value.trim();
 
-      // 1) Token "currency_mxn"
+      // 1) Token "currency_mxn" -> función local
       if (trimmed === "currency_mxn") {
         node[key] = currencyFormatterMx;
         return;
       }
 
-      // 2) Function normal
+      // 2) Intentar convertir funciones normales "function (val) { ... }"
       if (trimmed.startsWith("function")) {
         try {
           // eslint-disable-next-line no-eval
           node[key] = eval(`(${trimmed})`);
         } catch (err) {
-          console.error("Error al convertir formatter:", trimmed, err);
-          node[key] = value;
+          console.error("Error al convertir formatter (function):", trimmed, err);
+          node[key] = value; // dejamos el string, lo manejamos abajo si es formatter inválido
         }
-        return;
       }
 
-      // 3) Arrow function  (val => ...)
-      if (trimmed.includes("=>")) {
+      // 3) Intentar convertir arrow functions "val => val.toFixed(2)"
+      else if (trimmed.includes("=>")) {
         try {
           // eslint-disable-next-line no-eval
           node[key] = eval(`(${trimmed})`);
         } catch (err) {
-          console.error("Error al convertir arrow formatter:", trimmed, err);
+          console.error("Error al convertir formatter (arrow):", trimmed, err);
           node[key] = value;
         }
+      }
+
+      // 4) Si sigue siendo string y es un formatter, lo quitamos para que Apex no truene
+      if (key === "formatter" && typeof node[key] === "string") {
+        console.warn("Eliminando formatter inválido:", node[key]);
+        // Puedes elegir entre borrar la key o poner undefined
+        // delete node[key];
+        node[key] = undefined;
       }
     });
   };
