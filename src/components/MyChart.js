@@ -7,6 +7,37 @@ import { useTheme } from "@mui/material/styles";
 import Divider from "@mui/material/Divider";
 import MarkdownRenderer from "./MarkdownRenderer.js";
 
+// 🔍 Recorre el objeto y elimina cualquier callback inválido
+const sanitizeCallbacks = (obj, path = "root") => {
+  if (!obj || typeof obj !== "object") return;
+
+  Object.keys(obj).forEach((key) => {
+    const value = obj[key];
+
+    // Si es subobjeto, seguir recorriendo
+    if (value && typeof value === "object") {
+      sanitizeCallbacks(value, `${path}.${key}`);
+      return;
+    }
+
+    // Keys típicas de funciones en Apex
+    const isCallbackKey =
+      key === "formatter" || key === "custom" || key.startsWith("on");
+
+    if (isCallbackKey && typeof value !== "function" && value !== undefined) {
+      console.warn(
+        "[MyChart] Eliminando callback inválido",
+        key,
+        "en",
+        path,
+        "valor:",
+        value
+      );
+      delete obj[key];
+    }
+  });
+};
+
 const MyChart = ({ caption, options, series, type }) => {
   const theme = useTheme();
   const [isVisible, setIsVisible] = useState(false);
@@ -14,14 +45,13 @@ const MyChart = ({ caption, options, series, type }) => {
   const [chartOptions, setChartOptions] = useState({});
 
   useEffect(() => {
-    // Start visibility transition for fade-in effect
+    // Animaciones de entrada
     const visibilityTimer = setTimeout(() => {
       setIsVisible(true);
     }, 100);
 
-    // Start series data animation by setting the actual data with a delay
     const seriesTimer = setTimeout(() => {
-      setChartSeries(series);
+      setChartSeries(Array.isArray(series) ? series : []);
     }, 300);
 
     return () => {
@@ -31,8 +61,13 @@ const MyChart = ({ caption, options, series, type }) => {
   }, [series]);
 
   useEffect(() => {
+    // Proteger por si options viene undefined/null
+    const baseOptions =
+      options && typeof options === "object" ? { ...options } : {};
+
     // Apply additional chart configurations
-    const enhancedOptions = { ...options };
+    const enhancedOptions = { ...baseOptions };
+
     if (!enhancedOptions.chart) {
       enhancedOptions.chart = {};
     }
@@ -44,15 +79,26 @@ const MyChart = ({ caption, options, series, type }) => {
         enhancedOptions.chart.stacked === false)
     ) {
       enhancedOptions.dataLabels = {
+        ...(enhancedOptions.dataLabels || {}),
         enabled: false,
       };
     }
     if (enhancedOptions.title) {
-      enhancedOptions.title.align = "center";
+      enhancedOptions.title = {
+        ...enhancedOptions.title,
+        align: "center",
+      };
     }
     if (enhancedOptions.subtitle) {
-      enhancedOptions.subtitle.align = "center";
+      enhancedOptions.subtitle = {
+        ...enhancedOptions.subtitle,
+        align: "center",
+      };
     }
+
+    // 🧼 Paso clave: limpiar callbacks inválidos
+    sanitizeCallbacks(enhancedOptions);
+
     setChartOptions(enhancedOptions);
   }, [options]);
 
